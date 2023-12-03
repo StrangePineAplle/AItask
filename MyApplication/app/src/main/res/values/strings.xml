@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string name="subtitle">best number is:</string>
+    <string name="plus">+</string>
+    <string name="minus">-</string>
+
+    <string name="name">Name</string>
+    <string name="adres">Address</string>
+    <string name="openDate">Open date</string>
+    <string name="Sostav">Art direction</string>
+</resources>
