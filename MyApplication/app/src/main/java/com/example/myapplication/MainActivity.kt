@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -11,22 +12,39 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.db.MyAdapter
 import com.example.myapplication.db.MyDbManager
 import android.widget.SearchView
+import androidx.core.view.GravityCompat
 import com.example.myapplication.databinding.ActivityMainBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
     private val myDbManager = MyDbManager(this)
     val myAdapter = MyAdapter(ArrayList(), this)
+    private var job :Job? = null
+    private var job1 :Job? = null ///
 
-    lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.apply {
+
+
+            openMenu.setOnClickListener{
+                Drawer.openDrawer(GravityCompat.START)
+            }
+
+        }
+
         init()
         initSearchView()
     }
+
 
     override fun onResume() {
         super.onResume()
@@ -45,6 +63,11 @@ class MainActivity : AppCompatActivity() {
         startActivity(i)
     }
 
+    fun onClickCloseMenu(view: View){
+        binding.Drawer.closeDrawer(GravityCompat.START)
+    }
+
+
     private fun init(){
         val rcViev : RecyclerView = findViewById(R.id.rcViev)
         rcViev.layoutManager = LinearLayoutManager(this)
@@ -54,16 +77,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initSearchView(){
-        val searchView : SearchView = findViewById(R.id.searchV)
-
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+        binding.searchV.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                val list = myDbManager.readDbData(newText!!)
-                myAdapter.updateAdapter(list)
+                fillAdapter(newText!!)
                 return true
             }
 
@@ -72,25 +92,33 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun fillAdapter(){
-        val list = myDbManager.readDbData()
-        myAdapter.updateAdapter(list)
-        if (list.size > 0 ){
-            val tvNoElement = findViewById<TextView>(R.id.tvNoElements)
-            tvNoElement.visibility = View.GONE
-        }
-        else {
-          val tvNoElement = findViewById<TextView>(R.id.tvNoElements)
-            tvNoElement.visibility = View.VISIBLE
-        }
+    private fun fillAdapter(text : String = ""){
 
+        job?.cancel()
+        job = CoroutineScope(Dispatchers.Main).launch{
+
+            val list = myDbManager.readDbData(text)
+            myAdapter.updateAdapter(list)
+            if (list.size > 0 ){
+                binding.tvNoElements.visibility = View.GONE
+
+            }
+            else {
+                val tvNoElement = findViewById<TextView>(R.id.tvNoElements)
+                tvNoElement.visibility = View.VISIBLE
+            }
+
+        }
     }
 
+    @SuppressLint("SetTextI18n")
     fun NumberOfElements(){
-        val tvCount = findViewById<TextView>(R.id.tvCount)
-        val list = myDbManager.readDbData()
-        val len =  list.size
-        tvCount.text = "$len elements"
+        job1?.cancel()
+        job1 = CoroutineScope(Dispatchers.Main).launch {
+            val list = myDbManager.readDbData()
+            val len = list.size
+            binding.tvCount.text = "$len elements"
+        }
     }
 
     private fun getSwapMg() : ItemTouchHelper{
@@ -109,4 +137,9 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
+
+
+
+
 }

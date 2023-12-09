@@ -5,15 +5,19 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.provider.BaseColumns
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MyDbManager(val context: Context) {
-    val myDbHelper = MyDbHelper(context)
-    var db : SQLiteDatabase? = null
+    val myDbChangeManager  = MyDbChangeManager("")
+    var DATABASE_NAME = myDbChangeManager.DATABASE_NAME
 
+    val myDbHelper = MyDbHelper(context,DATABASE_NAME)
+    var db : SQLiteDatabase? = null
     fun openDb(){
         db = myDbHelper.writableDatabase
     }
-    fun incertToDb(title : String, adress : String, date : String, content : String) {
+    suspend fun incertToDb(title : String, adress : String, date : String, content : String) = withContext(Dispatchers.IO) {
         val values = ContentValues().apply {
             put(MyDbNameClass.COLUMN_NAME_TITLE, title)
             put(MyDbNameClass.COLUMN_NAME_ADRESS, adress)
@@ -26,9 +30,10 @@ class MyDbManager(val context: Context) {
     fun removeItemFromDb(id : String) {
         val selection = BaseColumns._ID + "=$id"
         db?.delete(MyDbNameClass.TABLE_NAME,selection, null)
+
     }
 
-    fun updateItem(title : String, adress : String, date : String, content : String, id:Int) {
+    suspend fun updateItem(title : String, adress : String, date : String, content : String, id:Int) = withContext(Dispatchers.IO) {
         val selection = BaseColumns._ID + "=$id"
         val values = ContentValues().apply {
             put(MyDbNameClass.COLUMN_NAME_TITLE, title)
@@ -37,14 +42,15 @@ class MyDbManager(val context: Context) {
             put(MyDbNameClass.COLUMN_NAME_CONTENT, content)
         }
         db?.update(MyDbNameClass.TABLE_NAME, values, selection, null)
+
     }
 
     @SuppressLint("Range")
-    fun readDbData(searchText : String = "") : ArrayList<ListItem>{
+    suspend fun readDbData(searchText : String = "") : ArrayList<ListItem> = withContext(Dispatchers.IO){
         val dataList = ArrayList<ListItem>()
         val selection = "${MyDbNameClass.COLUMN_NAME_TITLE} like ?"
-        val cursor = db?.query(MyDbNameClass.TABLE_NAME, null, selection, arrayOf("%$searchText%"),
-            null, null, null)
+        val cursor = db?.query(MyDbNameClass.TABLE_NAME, null, selection, arrayOf("%$searchText%"), null, null, null)
+
 
         while (cursor?.moveToNext()!!){
             val dataId = cursor.getInt(cursor.getColumnIndex(BaseColumns._ID))
@@ -62,8 +68,9 @@ class MyDbManager(val context: Context) {
             dataList.add(item)
         }
         cursor.close()
-        return dataList
+        return@withContext dataList
     }
+
     fun closeDb(){
         myDbHelper.close()
     }

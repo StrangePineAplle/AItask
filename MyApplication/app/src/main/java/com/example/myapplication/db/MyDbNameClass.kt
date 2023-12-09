@@ -9,7 +9,7 @@ object MyDbNameClass {
     const val COLUMN_NAME_ADRESS = "adress"
     const val COLUMN_NAME_CONTENT = "content"
 
-    const val DATABASE_VERSION = 2
+    const val DATABASE_VERSION = 3
     const val DATABASE_NAME = "MyDb.db"
 
     const val CREATE_TABLE = "CREATE TABLE IF NOT EXISTS $TABLE_NAME (" +

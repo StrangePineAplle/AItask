@@ -6,6 +6,10 @@ import android.view.View
 import android.widget.TextView
 import com.example.myapplication.db.MyDbManager
 import com.example.myapplication.db.MyIntentConstants
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 class EditActivity : AppCompatActivity() {
     private val myDbManager = MyDbManager(this)
@@ -40,14 +44,16 @@ class EditActivity : AppCompatActivity() {
         val myAdres = edAdres.text.toString()
         val myDirection = edDirection.text.toString()
 
-        if (myTitle != ""){
-            if (isEditState){
-                myDbManager.updateItem(myTitle,myAdres,myDate,myDirection,id)
-            } else{
-                myDbManager.incertToDb(myTitle,myAdres,myDate,myDirection)
+        if (myTitle != "") {
+        CoroutineScope(Dispatchers.Main).launch {
+                if (isEditState) {
+                    myDbManager.updateItem(myTitle, myAdres, myDate, myDirection, id)
+                } else {
+                    myDbManager.incertToDb(myTitle, myAdres, myDate, myDirection)
+                }
+                finish()
             }
 
-            finish()
         }
     }
 
